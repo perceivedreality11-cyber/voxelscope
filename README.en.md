@@ -1,32 +1,41 @@
-# VoxelScope · Enterprise CT Intelligence
+<div align="center">
 
-[中文](README.md) · [Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Deployment](docs/DEPLOYMENT.md)
+# VoxelScope
+
+### CT Porosity Analysis and Inspection Collaboration
+
+**Inspect pores in 3D, measure their properties, and review results with your team—all in your browser.**
 
 [![checks](https://github.com/perceivedreality11-cyber/voxelscope/actions/workflows/ci.yml/badge.svg)](https://github.com/perceivedreality11-cyber/voxelscope/actions/workflows/ci.yml)
+![Node.js](https://img.shields.io/badge/Node.js-24-5FA04E?logo=nodedotjs&logoColor=white)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-A self-hosted CT porosity analysis platform for materials inspection teams. Organize projects, import volumes, visualize pores, run reproducible measurements, review results, and inspect an audit trail.
+[Get started](#get-started) · [Import scan data](#import-scan-data) · [Team deployment](#team-deployment) · [User guide](docs/USAGE.md) · [中文](README.md)
 
-![Running workbench with a synthetic phantom](docs/screenshots/workbench.png)
+</div>
 
-Built around **multi-tenant workspaces, 3D analysis, asynchronous computation, and result traceability**. Bounded RAW reads support extracting regions and downsampled grids from GB-scale source files. Original dimensions, region coordinates, and sampling strides are preserved with each result. See the [large-file import guide](docs/DATA_IMPORT.md).
+![VoxelScope 3D porosity analysis workbench](docs/screenshots/workbench.png)
 
-## Architecture and analysis workflow
+*Workbench example using the built-in synthetic volume.*
 
-![Implemented architecture: browser workbench, HTTPS API, SQLite queue, worker thread, and persistent storage](docs/diagrams/architecture.svg)
+VoxelScope brings reconstructed CT volumes, pore measurements, and result reviews into one workspace for materials laboratories and inspection teams. Organize specimens or batches into projects, inspect pore distributions, repeat analyses with different parameters, and export your measurements.
 
-![CT workflow: import, ROI, thresholding, connectivity, measurement, result persistence, review, and export](docs/diagrams/workflow.svg)
+Run it on your own computer or deploy it on your own server. Analysis data and results stay in your deployment environment.
 
-The diagrams use Chinese labels and describe the current implementation. Regenerate the editable SVG files with `npm run docs:diagrams`. [Architecture details](docs/ARCHITECTURE.md).
+## What you can do
 
-| Jobs and review | Audit trail |
+| Task | Features |
 |---|---|
-| ![Jobs and review UI](docs/screenshots/jobs.png) | ![Audit chain UI](docs/screenshots/audit.png) |
+| Inspect pore structure | Rotate and zoom a 3D pore point cloud alongside XY / XZ / YZ slices |
+| Measure pore properties | Calculate porosity, connected-component count, volume, equivalent diameter, centroid, and depth profiles |
+| Refine segmentation | Adjust manual or Otsu thresholds, connectivity, minimum component size, and measurement region; inspect slice overlays |
+| Import large RAW sources | Extract regions or downsample grids from GB-scale files, preserving the crop and sampling parameters |
+| Manage inspection work | Keep datasets, analysis jobs, historical results, and calculation parameters within projects |
+| Review and deliver results | Assign team roles, append review decisions, and export JSON reports, pore CSV files, and 3D PNG images |
 
-Screenshots come from the running application with test accounts and a deterministic synthetic phantom.
+## Get started
 
-## Run
-
-Requires Node.js **24.x**. No runtime packages, package install, CDN, external API, or model download are needed.
+Install **Node.js 24.x** and Git, then run:
 
 ```bash
 git clone https://github.com/perceivedreality11-cyber/voxelscope.git
@@ -34,49 +43,84 @@ cd voxelscope
 npm start
 ```
 
-Open http://127.0.0.1:8787. First startup prints a random password for `admin@local`. Change it through the account panel and sign in again.
+Alternatively, [download the source ZIP](https://github.com/perceivedreality11-cyber/voxelscope/archive/refs/heads/main.zip), extract it, and run `npm start` in the project directory. The application needs no additional npm packages. Windows users can launch `start.cmd`.
 
-Create a project, click **加载演示数据**, and inspect the completed result. The UI is in Chinese with English technical labels. The deterministic synthetic phantom is explicitly identified in its metadata and UI; it is not a real scan.
+Open **http://127.0.0.1:8787**. Sign in as `admin@local` using the initial password printed in the terminal on first startup. Change it through the account settings and sign in again.
 
-## Implemented
+### Run your first analysis
 
-- Tenant-scoped projects, datasets, jobs, reviews, and audit records.
-- Admin, analyst, and viewer roles, member disabling, password changes, expiring sessions.
-- Native uint8/uint16 RAW import with bounded reads, region selection, XYZ sampling strides, endianness/header controls, progress and cancellation; PNG/JPEG/BMP stacks converted to uint8 by the browser.
-- WebGL pore-surface point clouds with orbit/zoom, physical-aspect orthogonal slices, PNG capture, Canvas2D fallback.
-- Manual and 256-bin Otsu segmentation, 6/26 connectivity, small-component filtering, box/elliptical-cylinder ROI.
-- Porosity, equivalent diameter, centroid, anisotropic voxel-face area, ROI-boundary contact, depth profile, threshold sensitivity.
-- Durable SQLite queue, independent worker thread, timeout/cancellation, explicit interrupted-job state after restart.
-- SHA-256 input integrity checks and versioned reports; append-only reviews; per-tenant audit hash chains.
-- JSON/CSV exports, consistent snapshot backup, Docker/HTTPS configuration, CI workflows.
+The interface uses Chinese labels:
 
-## Validate
+1. Select **创建检测项目** to create a project for a specimen or batch.
+2. Select **加载演示数据** to load the example volume and inspect its completed analysis.
+3. Adjust the threshold, region, or minimum voxel count, then select **提交分析任务** to create another result.
+4. Open **任务与复核** to revisit results and add review comments, or download JSON / CSV from the workbench.
+
+The built-in example lets you try the complete workflow before importing your own scans.
+
+## Import scan data
+
+Select **导入体数据**, name the dataset, and enter the voxel spacing from your CT reconstruction.
+
+| Source | How to import |
+|---|---|
+| Unsigned 8 / 16-bit RAW | Enter the original XYZ dimensions, bit depth, byte order, and header offset |
+| GB-scale RAW file | Under **RAW 区域与降采样**, choose a region origin, extent, and XYZ sampling strides |
+| PNG / JPEG / BMP stack | Select at least two equal-sized slices; files are naturally sorted by name and imported as 8-bit grayscale |
+| TIFF / DICOM reconstruction | Export RAW or a supported slice format from your reconstruction software first |
+
+Use an original-resolution region for fine-pore measurements, or a downsampled grid to inspect a wider distribution. Sampling adjusts the voxel spacing, and the report retains the original dimensions and sampling settings.
+
+[Region examples, grid parameters, and sampling details →](docs/DATA_IMPORT.md)
+
+## Analysis and review
+
+![CT import, pore analysis, review, and export workflow](docs/diagrams/workflow.svg)
+
+After submitting an analysis, you can keep browsing projects or switch pages. Each calculation is saved as a separate job so its result and parameters can be revisited. Review comments are appended to the job with the reviewer, timestamp, and decision.
+
+| Jobs and review | Activity records |
+|---|---|
+| ![Jobs and review page](docs/screenshots/jobs.png) | ![Audit page](docs/screenshots/audit.png) |
+
+## Work with a team
+
+Administrators add members through **团队与权限** and assign roles based on their responsibilities.
+
+| Role | Available actions |
+|---|---|
+| Administrator | Manage members, inspect activity records, and perform project, analysis, and review operations |
+| Analyst | Create projects, import data, submit or cancel analyses, and append review comments |
+| Viewer | Browse projects and results, read reviews, and download analysis outputs |
+
+Members share projects within their company workspace, with roles controlling available operations. Separate company workspaces manage their data independently. See the [deployment guide](docs/DEPLOYMENT.md) for workspace provisioning, account recovery, and backups.
+
+## Team deployment
+
+Docker Compose configures the application, HTTPS gateway, and data volumes:
 
 ```bash
-npm run check
-npm test
-npm run test:load
-node scripts/benchmark.mjs
+cp .env.example .env
+# Edit .env: set the administrator password, domain, and PUBLIC_ORIGIN.
+docker compose up --build -d
 ```
 
-Optional browser regression:
+Configure certificates, storage, and backups for your server. Follow the [deployment and operations guide](docs/DEPLOYMENT.md) for configuration and acceptance checks.
 
-```bash
-npm install --no-save --package-lock=false playwright@1.62.1
-npx playwright install chromium
-node scripts/ui-smoke.mjs
-```
+![VoxelScope system architecture](docs/diagrams/architecture.svg)
 
-See [validation evidence](docs/VALIDATION.md) for numerical, HTTP, browser and concurrent-session checks. The live CI badge links to Windows, Ubuntu and Chromium runs.
+## Documentation and support
 
-For source archive extraction, first-push commands, and repository setup, see the [GitHub publishing guide](docs/PUBLISHING.md).
+| Topic | Guide |
+|---|---|
+| Workflow, measurement definitions, and exports | [User guide](docs/USAGE.md) |
+| RAW regions, sampling, and grid parameters | [Data import](docs/DATA_IMPORT.md) |
+| HTTPS, accounts, capacity settings, and backup recovery | [Deployment](docs/DEPLOYMENT.md) |
+| Test methods and validation records | [Validation](docs/VALIDATION.md) |
+| System design and API integrations | [Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) |
+| Questions and feature requests | [GitHub Issues](https://github.com/perceivedreality11-cyber/voxelscope/issues) |
+| Development and contributions | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) |
 
-## Data and measurement conventions
+The detailed guides and diagram labels are in Chinese.
 
-Select an ROI inside the specimen and use the reconstruction's physical voxel spacing. ROI-boundary contact describes pores intersecting the measurement region. Areas use voxel faces, point clouds sample exposed voxel centers, and the sensitivity chart compares raw porosity at five thresholds. See the [measurement definitions](docs/USAGE.md).
-
-Image stacks produce uint8 data. Use unsigned 16-bit RAW to preserve native high-bit-depth precision, and export TIFF/DICOM scans to RAW in the reconstruction software. The [import guide](docs/DATA_IMPORT.md) records the analysis-grid budget and the resolution effects of subsampling.
-
-The default deployment uses one application instance, one analysis worker, and SQLite. Tenant members share projects through three server-enforced roles. Capacity settings, backups and acceptance checks are in the [deployment guide](docs/DEPLOYMENT.md); multi-node and identity-integration designs are in the [architecture roadmap](docs/ARCHITECTURE.md).
-
-License: MIT. Commercial use is allowed. Use the deployment acceptance procedure to calibrate scan parameters and compare specimen measurements against reference results.
+VoxelScope is available under the [MIT license](LICENSE), permitting commercial use, modification, and distribution.
