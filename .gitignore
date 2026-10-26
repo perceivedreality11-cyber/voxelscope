@@ -1,0 +1,13 @@
+node_modules/
+data/
+exports/
+*.raw
+*.zip
+.DS_Store
+Thumbs.db
+coverage/
+test-results/
+ui-failure.png
+backups/
+.env
+*.log

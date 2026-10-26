@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title description">
+  <title id="title">VoxelScope · CT 分析流程</title><desc id="description">从体数据导入到定量分析、复核和结果交付</desc>
+  <defs><linearGradient id="background" x2="1" y2="1"><stop stop-color="#101c2e"/><stop offset="1" stop-color="#080e19"/></linearGradient>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#738fac"/></marker></defs>
+  <style>
+    svg { --teal:#64dfc3; --purple:#b4a2ff; font-family:'Microsoft YaHei','Noto Sans CJK SC',Arial,sans-serif; }
+    .title { fill:#eff5ff; font-size:42px; font-weight:700; } .subtitle { fill:#a1b5cd; font-size:19px; }
+    .lane { fill:#101a2a; stroke:#25364e; } .lane-title { fill:#a3b7d1; font-size:15px; letter-spacing:1px; }
+    .card { fill:#152338; stroke:#30435e; } .card-title { fill:#edf4ff; font-size:23px; font-weight:700; }
+    .body { fill:#b4c6dd; font-size:17px; } .teal { fill:#64dfc3; font-size:13px; font-weight:700; letter-spacing:1px; }
+    .purple { fill:#b4a2ff; font-size:13px; font-weight:700; letter-spacing:1px; }
+    .edge { fill:none; stroke:#738fac; stroke-width:2; stroke-linejoin:round; } .edge-label { fill:#8da4be; font-size:12px; }
+    .footer { fill:#91a7c1; font-size:16px; } .tag { fill:#64dfc3; font-size:14px; letter-spacing:1px; }
+  </style>
+  <rect width="1440" height="900" rx="24" fill="url(#background)"/>
+  <rect x="60" y="54" width="5" height="82" rx="2" fill="#64dfc3"/>
+  <text x="84" y="91" class="title">VoxelScope · CT 分析流程</text><text x="84" y="128" class="subtitle">从体数据导入到定量分析、复核和结果交付</text>
+  <rect x="60" y="178" width="1320" height="44" rx="10" fill="#132a2b"/><text x="80" y="206" class="tag">执行保障：持久化队列  /  独立计算线程  /  任务取消与超时  /  输入完整性校验</text><g><rect x="60" y="256" width="300" height="194" rx="16" class="card"/>
+    <rect x="60" y="274" width="3" height="28" rx="1.5" fill="var(--teal)"/>
+    <text x="82" y="286" class="teal">01 / IMPORT</text><text x="82" y="319" class="card-title">导入体数据</text>
+    <text x="82" y="350" class="body">uint8 / uint16 RAW</text><text x="82" y="375" class="body">或 PNG / JPEG / BMP 切片</text><text x="82" y="400" class="body">设置真实 XYZ 体素间距</text></g><g><rect x="400" y="256" width="300" height="194" rx="16" class="card"/>
+    <rect x="400" y="274" width="3" height="28" rx="1.5" fill="var(--teal)"/>
+    <text x="422" y="286" class="teal">02 / ROI</text><text x="422" y="319" class="card-title">定义测量区域</text>
+    <text x="422" y="350" class="body">矩形体 / 椭圆柱 ROI</text><text x="422" y="375" class="body">设置边缘裁剪比例</text><text x="422" y="400" class="body">确保 ROI 位于材料内部</text></g><g><rect x="740" y="256" width="300" height="194" rx="16" class="card"/>
+    <rect x="740" y="274" width="3" height="28" rx="1.5" fill="var(--teal)"/>
+    <text x="762" y="286" class="teal">03 / SEGMENT</text><text x="762" y="319" class="card-title">灰度阈值分割</text>
+    <text x="762" y="350" class="body">手动 / Otsu 阈值</text><text x="762" y="375" class="body">选择暗孔隙或亮区域</text><text x="762" y="400" class="body">保留原始分割体素统计</text></g><g><rect x="1080" y="256" width="300" height="194" rx="16" class="card"/>
+    <rect x="1080" y="274" width="3" height="28" rx="1.5" fill="var(--teal)"/>
+    <text x="1102" y="286" class="teal">04 / LABEL</text><text x="1102" y="319" class="card-title">标记连通孔隙</text>
+    <text x="1102" y="350" class="body">6 / 26 邻域</text><text x="1102" y="375" class="body">最小体素数筛选</text><text x="1102" y="400" class="body">记录边界接触情况</text></g><g><rect x="1080" y="584" width="300" height="194" rx="16" class="card"/>
+    <rect x="1080" y="602" width="3" height="28" rx="1.5" fill="var(--purple)"/>
+    <text x="1102" y="614" class="purple">05 / MEASURE</text><text x="1102" y="647" class="card-title">定量计算</text>
+    <text x="1102" y="678" class="body">孔隙率 / 体积 / 等效直径</text><text x="1102" y="703" class="body">质心 / 体素面面积</text><text x="1102" y="728" class="body">Z 剖面 / 阈值敏感性</text></g><g><rect x="740" y="584" width="300" height="194" rx="16" class="card"/>
+    <rect x="740" y="602" width="3" height="28" rx="1.5" fill="var(--purple)"/>
+    <text x="762" y="614" class="purple">06 / PRESERVE</text><text x="762" y="647" class="card-title">留存可追溯结果</text>
+    <text x="762" y="678" class="body">输入 SHA-256 指纹</text><text x="762" y="703" class="body">任务 ID / 参数 / 引擎版本</text><text x="762" y="728" class="body">独立线程写入结果文件</text></g><g><rect x="400" y="584" width="300" height="194" rx="16" class="card"/>
+    <rect x="400" y="602" width="3" height="28" rx="1.5" fill="var(--purple)"/>
+    <text x="422" y="614" class="purple">07 / REVIEW</text><text x="422" y="647" class="card-title">复核与审计</text>
+    <text x="422" y="678" class="body">查看历史分析结果</text><text x="422" y="703" class="body">追加接受 / 退回复核记录</text><text x="422" y="728" class="body">企业内操作审计</text></g><g><rect x="60" y="584" width="300" height="194" rx="16" class="card"/>
+    <rect x="60" y="602" width="3" height="28" rx="1.5" fill="var(--purple)"/>
+    <text x="82" y="614" class="purple">08 / EXPORT</text><text x="82" y="647" class="card-title">导出交付</text>
+    <text x="82" y="678" class="body">JSON 完整报告</text><text x="82" y="703" class="body">CSV 全量连通域</text><text x="82" y="728" class="body">PNG 三维视图</text></g><path d="M360 352 H400" class="edge" marker-end="url(#arrow)"/><path d="M700 352 H740" class="edge" marker-end="url(#arrow)"/><path d="M1040 352 H1080" class="edge" marker-end="url(#arrow)"/><path d="M1230 450 V584" class="edge" marker-end="url(#arrow)"/><text x="1247" y="520" class="edge-label">计算结果</text><path d="M1080 680 H1040" class="edge" marker-end="url(#arrow)"/><path d="M740 680 H700" class="edge" marker-end="url(#arrow)"/><path d="M400 680 H360" class="edge" marker-end="url(#arrow)"/>
+  <path d="M60 816 H1380" stroke="#27384f"/>
+  <text x="60" y="853" class="footer">合成 phantom 用于程序验证；真实工件的分割与测量需单独验证。</text><text x="1225" y="853" class="tag">VOXELSCOPE 1.0</text>
+</svg>

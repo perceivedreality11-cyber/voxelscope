@@ -1,0 +1,48 @@
+services:
+  app:
+    build: .
+    init: true
+    restart: unless-stopped
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-https://localhost}
+      SECURE_COOKIES: "true"
+      VOXELSCOPE_TENANT: ${VOXELSCOPE_TENANT:-Inspection Team}
+      VOXELSCOPE_ADMIN_EMAIL: ${VOXELSCOPE_ADMIN_EMAIL:-admin@local}
+      VOXELSCOPE_ADMIN_PASSWORD: ${VOXELSCOPE_ADMIN_PASSWORD:?Set an initial 12+ character administrator password in .env}
+    volumes:
+      - workspace-data:/app/data
+    expose:
+      - "8787"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    mem_limit: 1g
+    cpus: 2
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_HOST: ${SITE_HOST:-localhost}
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+volumes:
+  workspace-data:
+  caddy-data:
+  caddy-config:

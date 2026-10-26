@@ -1,0 +1,17 @@
+{
+  "name": "voxelscope",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted, multi-tenant CT analysis platform for inspection teams",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test",
+    "check": "node scripts/check.mjs",
+    "test:browser": "node scripts/ui-smoke.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
+    "docs:diagrams": "node scripts/diagrams.mjs"
+  },
+  "engines": { "node": ">=24 <25" },
+  "license": "MIT"
+}

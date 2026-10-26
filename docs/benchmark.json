@@ -1,0 +1,41 @@
+{
+  "engine": "1.0.0",
+  "timestamp": "2026-10-26T01:48:31.998Z",
+  "node": "v24.21.0",
+  "platform": "win32",
+  "architecture": "x64",
+  "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+  "note": "Single local run; excludes phantom generation and network/disk I/O. Synthetic validation only, not a concurrency or real-CT accuracy benchmark.",
+  "results": [
+    {
+      "size": 64,
+      "voxels": 262144,
+      "elapsedMs": 33.11,
+      "components": 55,
+      "porosity": 0.031902313232421875,
+      "truthCount": 8363,
+      "renderedPoints": 5710,
+      "rssMb": 42
+    },
+    {
+      "size": 96,
+      "voxels": 884736,
+      "elapsedMs": 72.09,
+      "components": 59,
+      "porosity": 0.03243227358217592,
+      "truthCount": 28694,
+      "renderedPoints": 14287,
+      "rssMb": 50
+    },
+    {
+      "size": 128,
+      "voxels": 2097152,
+      "elapsedMs": 86.67,
+      "components": 60,
+      "porosity": 0.032715797424316406,
+      "truthCount": 68610,
+      "renderedPoints": 26837,
+      "rssMb": 66
+    }
+  ]
+}
