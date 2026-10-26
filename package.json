@@ -10,7 +10,8 @@
     "check": "node scripts/check.mjs",
     "test:browser": "node scripts/ui-smoke.mjs",
     "benchmark": "node scripts/benchmark.mjs",
-    "docs:diagrams": "node scripts/diagrams.mjs"
+    "docs:diagrams": "node scripts/diagrams.mjs",
+    "test:load": "node scripts/load-test.mjs"
   },
   "engines": { "node": ">=24 <25" },
   "license": "MIT"

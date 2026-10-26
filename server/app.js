@@ -7,13 +7,14 @@ import { openStore } from './store.js';
 import { createQueue } from './queue.js';
 import { digest, token, hashPassword, verifyPassword, readSession, sessionCookie } from './auth.js';
 import { decodeRaw, makeDemo, validateDimensions, validateSpacing, MAX_VOXELS } from '../src/core.js';
+import { planRawRegion } from '../src/raw-volume.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const allowedStatic = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
-  ...['app', 'renderer', 'core'].map(name => [`/src/${name}.js`, [`src/${name}.js`, 'text/javascript; charset=utf-8']]),
+  ...['app', 'renderer', 'core', 'raw-volume'].map(name => [`/src/${name}.js`, [`src/${name}.js`, 'text/javascript; charset=utf-8']]),
 ]);
 const error = (status, message) => Object.assign(new Error(message), { status });
 const cleanName = (value, max = 120) => {
@@ -204,9 +205,16 @@ export async function createApp({ directory, bootstrap, secureCookies = false, p
         if (req.headers['content-type'] !== 'application/octet-stream') throw error(415, 'Expected application/octet-stream.');
         let input;
         try { input = JSON.parse(decodeURIComponent(req.headers['x-volume-meta'] || '')); } catch { throw error(400, 'Invalid volume metadata.'); }
+        if (!input || typeof input !== 'object' || Array.isArray(input)) throw error(400, 'Invalid volume metadata.');
         const meta = { projectId: input.projectId, name: cleanName(input.name), dims: input.dims, spacing: input.spacing, bits: input.bits, source: { kind: 'imported', format: cleanName(input.format || 'RAW', 50) } };
         validateDimensions(meta.dims); validateSpacing(meta.spacing); project(user, meta.projectId);
         if (![8, 16].includes(meta.bits)) throw error(400, 'Expected uint8 or uint16 data.');
+        if (input.rawSource !== undefined) {
+          let plan;
+          try { plan = planRawRegion(input.rawSource); } catch (e) { throw error(400, e.message); }
+          if (plan.source.bits !== meta.bits || plan.dims.some((n, a) => n !== meta.dims[a]) || plan.spacing.some((n, a) => n !== meta.spacing[a])) throw error(400, 'RAW source parameters do not match the imported grid.');
+          meta.source.rawImport = plan.source;
+        }
         const bytes = await body(req, MAX_VOXELS * 2);
         decodeRaw(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), meta.dims, { bits: meta.bits });
         send(201, await saveDataset(user, meta, bytes)); return;

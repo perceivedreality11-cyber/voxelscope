@@ -40,7 +40,9 @@ JSON 请求使用 `Content-Type: application/json`。API 错误返回 `{ "error"
 }
 ```
 
-请求体长度必须正好等于 `X×Y×Z×bits/8`。API 接收规范化小端数据；大端转换、文件头去除和图片解码在前端进行。返回 id、sha256 和 meta。不会接受客户端传入的 tenant_id。数据集没有更新 / 删除接口。
+请求体长度必须正好等于分析网格的 `X×Y×Z×bits/8`。API 接收规范化小端数据；大端转换、文件头去除、RAW 区域采样和图片解码在前端进行。返回 id、sha256 和 meta。不会接受客户端传入的 tenant_id。数据集没有更新 / 删除接口。
+
+RAW 区域导入可附加 `rawSource`，字段包括原始 `dims`、`spacing`、`bits`、`offset`、`littleEndian`、`origin`、`size` 与 `stride`。例如从 `[8,8,8]`、间距 `[1,1.5,2]`、步长 `[2,2,2]` 生成网格时，顶层 `dims` 为 `[4,4,4]`、`spacing` 为 `[2,3,4]`。服务端校验计算得到的网格与顶层参数一致，将规范化后的源参数保存到 `meta.source.rawImport`，并包含在分析报告中。完整字段定义见 [导入指南](DATA_IMPORT.md)。
 
 ## 分析任务
 

@@ -1,5 +1,6 @@
 import { decodeRaw, validateDimensions, validateSpacing } from './core.js';
 import { VolumeRenderer } from './renderer.js';
+import { readRawRegion } from './raw-volume.js';
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -166,19 +167,26 @@ $('demo-button').addEventListener('click', action(async e => {
 
 $('import-button').onclick = () => {
   const projectId = state.projectId;
-  modal('导入 CT 体数据', `<p class="modal-note">支持 RAW（uint8 / uint16）或 PNG / JPEG / BMP 切片序列。切片按文件名自然排序，同尺寸、至少 2 张；图片统一转为 8 位灰度。每个体数据上限 4,194,304 体素。TIFF / DICOM 请先在重建软件转换。</p>
+  let importController;
+  modal('导入 CT 体数据', `<p class="modal-note">RAW 支持分块读取、区域裁剪与降采样，可从 GB 级原文件提取分析网格；每次分析网格上限 4,194,304 体素。PNG / JPEG / BMP 切片按文件名自然排序，同尺寸、至少 2 张，转换为 8 位灰度。</p>
     <label>数据集名称<input name="name" maxlength="120" placeholder="工件编号 · 扫描批次" required></label><label>文件<input name="files" type="file" accept=".raw,.bin,.png,.jpg,.jpeg,.bmp" multiple required></label>
     <p class="tiny muted">体素间距来自重建参数；单位 µm，XYZ 分别填写。</p><div class="modal-fields-grid"><label>X 间距<input name="sx" type="number" value="8" min="0.001" max="1000000" step="any" required></label><label>Y 间距<input name="sy" type="number" value="8" min="0.001" max="1000000" step="any" required></label><label>Z 间距<input name="sz" type="number" value="12" min="0.001" max="1000000" step="any" required></label></div>
-    <details class="import-options" open><summary>RAW 参数（图片序列不使用）</summary><div class="modal-fields-grid"><label>宽度 X<input name="w" type="number" value="96" min="2" max="2048"></label><label>高度 Y<input name="h" type="number" value="96" min="2" max="2048"></label><label>层数 Z<input name="d" type="number" value="96" min="2" max="2048"></label></div><div class="form-row"><label>位深<select name="bits"><option value="8">uint8</option><option value="16">uint16</option></select></label><label>字节序<select name="endian"><option value="little">Little endian</option><option value="big">Big endian</option></select></label></div><label>文件头偏移 / bytes<input name="offset" type="number" min="0" value="0"></label></details><p id="import-progress" class="progress-note"></p>`, async form => {
-    const spacing = ['sx', 'sy', 'sz'].map(k => Number(form.get(k))); validateSpacing(spacing);
+    <details class="import-options" open><summary>RAW 原文件参数（图片序列不使用）</summary><div class="modal-fields-grid"><label>宽度 X<input name="w" type="number" value="96" min="2" max="1000000"></label><label>高度 Y<input name="h" type="number" value="96" min="2" max="1000000"></label><label>层数 Z<input name="d" type="number" value="96" min="2" max="1000000"></label></div><div class="form-row"><label>位深<select name="bits"><option value="8">uint8</option><option value="16">uint16</option></select></label><label>字节序<select name="endian"><option value="little">Little endian</option><option value="big">Big endian</option></select></label></div><label>文件头偏移 / bytes<input name="offset" type="number" min="0" value="0"></label></details>
+    <details class="import-options"><summary>RAW 区域与降采样</summary><p class="tiny muted">起点使用从 0 开始的原文件体素坐标。区域尺寸 0 表示读取该轴剩余范围；步长 1 保持原分辨率，2 表示隔一个体素采样。降采样后体素间距会同步更新。</p>
+    ${[['o', '区域起点', 0, 0], ['r', '区域尺寸', 0, 0], ['t', '采样步长', 1, 1]].map(([prefix, label, value, min]) => `<div class="modal-fields-grid">${['x', 'y', 'z'].map(axis => `<label>${label} ${axis.toUpperCase()}<input name="${prefix}${axis}" type="number" value="${value}" min="${min}" max="1000000"></label>`).join('')}</div>`).join('')}</details><p id="import-progress" class="progress-note"></p><button id="cancel-raw-read" type="button" class="secondary" hidden>取消 RAW 读取</button>`, async form => {
+    let spacing = ['sx', 'sy', 'sz'].map(k => Number(form.get(k))); validateSpacing(spacing);
     const files = form.getAll('files').filter(f => f.size);
     if (!files.length) throw new Error('请选择文件');
-    let data, dims, bits, format;
+    let data, dims, bits, format, rawSource;
     if (files.length === 1 && /\.(raw|bin)$/i.test(files[0].name)) {
-      dims = ['w', 'h', 'd'].map(k => Number(form.get(k))); validateDimensions(dims); bits = Number(form.get('bits')); format = 'RAW';
-      const offset = Number(form.get('offset'));
-      if (!Number.isSafeInteger(offset) || offset < 0 || files[0].size !== dims[0] * dims[1] * dims[2] * bits / 8 + offset) throw new Error('RAW 文件大小与尺寸、位深或文件头偏移不一致');
-      data = decodeRaw(await files[0].slice(offset).arrayBuffer(), dims, { bits, littleEndian: form.get('endian') === 'little' });
+      bits = Number(form.get('bits')); format = 'RAW';
+      importController = new AbortController(); $('cancel-raw-read').hidden = false;
+      try {
+        const imported = await readRawRegion(files[0], { dims: ['w', 'h', 'd'].map(k => Number(form.get(k))), spacing, bits, offset: Number(form.get('offset')), littleEndian: form.get('endian') === 'little',
+          origin: ['x', 'y', 'z'].map(a => Number(form.get(`o${a}`))), size: ['x', 'y', 'z'].map(a => Number(form.get(`r${a}`))), stride: ['x', 'y', 'z'].map(a => Number(form.get(`t${a}`))) },
+        { signal: importController.signal, onProgress: p => { $('import-progress').textContent = `区域读取 ${Math.round(p.completed / p.total * 100)}% · 已读取 ${number(p.bytesRead / 1024 / 1024, 1)} MiB`; } });
+        ({ data, dims, spacing, rawSource } = imported);
+      } finally { $('cancel-raw-read').hidden = true; }
     } else {
       if (files.length < 2 || files.some(f => !/\.(png|jpe?g|bmp)$/i.test(f.name))) throw new Error('请选择单个 RAW 文件，或至少两张 PNG/JPEG/BMP 切片');
       const collator = new Intl.Collator('en', { numeric: true }); files.sort((a, b) => collator.compare(a.name, b.name));
@@ -199,11 +207,12 @@ $('import-button').onclick = () => {
     }
     const bytes = new Uint8Array(data.length * bits / 8), view = new DataView(bytes.buffer);
     for (let i = 0; i < data.length; i++) if (bits === 8) bytes[i] = data[i]; else view.setUint16(i * 2, data[i], true);
-    const meta = { projectId, name: form.get('name'), dims, spacing, bits, format };
+    const meta = { projectId, name: form.get('name'), dims, spacing, bits, format, ...(rawSource ? { rawSource } : {}) };
     $('import-progress').textContent = '正在写入服务器…';
     const result = await api('/api/datasets', { method: 'POST', bytes, headers: { 'Content-Type': 'application/octet-stream', 'X-Volume-Meta': encodeURIComponent(JSON.stringify(meta)) } });
     if (projectId === state.projectId) await refreshDatasets(result.id); toast('体数据已保存，SHA-256 指纹已记录');
   }, '导入数据');
+  $('cancel-raw-read').onclick = () => importController?.abort();
 };
 
 function currentSettings() {

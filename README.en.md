@@ -8,7 +8,7 @@ A self-hosted CT porosity analysis platform for materials inspection teams. Orga
 
 ![Running workbench with a synthetic phantom](docs/screenshots/workbench.png)
 
-**Status: an enterprise-workflow MVP for small ROI validation and internal pilots.** Multi-tenant authorization and persistence are implemented. The current engine caps a volume at 4,194,304 voxels; it does not process full industrial CT volumes of tens of GB. It has not undergone enterprise load qualification, independent penetration testing, or metrology certification.
+Built around **multi-tenant workspaces, 3D analysis, asynchronous computation, and result traceability**. Bounded RAW reads support extracting regions and downsampled grids from GB-scale source files. Original dimensions, region coordinates, and sampling strides are preserved with each result. See the [large-file import guide](docs/DATA_IMPORT.md).
 
 ## Architecture and analysis workflow
 
@@ -42,7 +42,7 @@ Create a project, click **加载演示数据**, and inspect the completed result
 
 - Tenant-scoped projects, datasets, jobs, reviews, and audit records.
 - Admin, analyst, and viewer roles, member disabling, password changes, expiring sessions.
-- Native uint8/uint16 RAW import with endianness/header controls; PNG/JPEG/BMP stacks converted to uint8 by the browser.
+- Native uint8/uint16 RAW import with bounded reads, region selection, XYZ sampling strides, endianness/header controls, progress and cancellation; PNG/JPEG/BMP stacks converted to uint8 by the browser.
 - WebGL pore-surface point clouds with orbit/zoom, physical-aspect orthogonal slices, PNG capture, Canvas2D fallback.
 - Manual and 256-bin Otsu segmentation, 6/26 connectivity, small-component filtering, box/elliptical-cylinder ROI.
 - Porosity, equivalent diameter, centroid, anisotropic voxel-face area, ROI-boundary contact, depth profile, threshold sensitivity.
@@ -55,6 +55,7 @@ Create a project, click **加载演示数据**, and inspect the completed result
 ```bash
 npm run check
 npm test
+npm run test:load
 node scripts/benchmark.mjs
 ```
 
@@ -66,16 +67,16 @@ npx playwright install chromium
 node scripts/ui-smoke.mjs
 ```
 
-See [validation evidence](docs/VALIDATION.md). GitHub workflows are provided; remote CI status is not claimed before a push.
+See [validation evidence](docs/VALIDATION.md) for numerical, HTTP, browser and concurrent-session checks. The live CI badge links to Windows, Ubuntu and Chromium runs.
 
 For source archive extraction, first-push commands, and repository setup, see the [GitHub publishing guide](docs/PUBLISHING.md).
 
-## Measurement boundaries
+## Data and measurement conventions
 
-The ROI must lie within the specimen. There is no automatic specimen mask; surrounding air is counted as pore space if included. ROI-boundary contact is **not** a measurement of open porosity. Voxel-face area is a grid approximation, and point clouds are visualization samples. Threshold sensitivity is not a confidence interval.
+Select an ROI inside the specimen and use the reconstruction's physical voxel spacing. ROI-boundary contact describes pores intersecting the measurement region. Areas use voxel faces, point clouds sample exposed voxel centers, and the sensitivity chart compares raw porosity at five thresholds. See the [measurement definitions](docs/USAGE.md).
 
-Image-stack decoding does not preserve source 16-bit PNG precision. TIFF, DICOM, signed/float RAW, and volumetric meshing are not supported. Use unsigned 16-bit RAW for native high-bit-depth analysis.
+Image stacks produce uint8 data. Use unsigned 16-bit RAW to preserve native high-bit-depth precision, and export TIFF/DICOM scans to RAW in the reconstruction software. The [import guide](docs/DATA_IMPORT.md) records the analysis-grid budget and the resolution effects of subsampling.
 
-The deployment is single-instance, single-compute-worker, and SQLite-backed. Tenant members share all projects in their tenant. SSO/MFA, per-project ACLs, enforced independent approval, distributed processing, automatic retention, and regulatory e-signatures are future work. Audit hashes detect edits relative to the stored chain; a database administrator can recompute the entire chain.
+The default deployment uses one application instance, one analysis worker, and SQLite. Tenant members share projects through three server-enforced roles. Capacity settings, backups and acceptance checks are in the [deployment guide](docs/DEPLOYMENT.md); multi-node and identity-integration designs are in the [architecture roadmap](docs/ARCHITECTURE.md).
 
-License: MIT. Commercial use is allowed. Validate the measurement method against real scans and reference measurements before using it for production quality decisions.
+License: MIT. Commercial use is allowed. Use the deployment acceptance procedure to calibrate scan parameters and compare specimen measurements against reference results.

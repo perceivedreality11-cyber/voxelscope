@@ -1,6 +1,6 @@
 # Security policy
 
-VoxelScope 1.0 is an internal-pilot foundation, not a security-certified production product. Only version 1.0 is currently maintained in this repository.
+This policy covers VoxelScope 1.0, its server authorization, account lifecycle, data handling, and deployment controls.
 
 ## Reporting
 
@@ -13,11 +13,11 @@ Tenant-scoped server authorization, three roles, scrypt password hashes, expirin
 ## Scope and limitations
 
 - The operator controls the host, database, volume files, backups, TLS termination, and account provisioning.
-- Tenant members can read every project and dataset within their tenant. There are no project-level ACLs, MFA, SSO, or independent-review enforcement.
+- Authorization applies at tenant and role level: tenant members can read every project and dataset within their tenant. Review records are append-only workflow records.
 - Hash chains lack an external trust anchor. Host / DB administrators can edit and recompute them, or truncate the tail.
 - Login limiting uses the TCP peer address and is shared behind a proxy. A production gateway should apply its own controls.
 - The queue is single-instance. Do not run multiple app processes against one directory.
 - Input quotas do not cover result files. Enforce disk monitoring and a retention policy outside the application.
-- Docker tags are not digest pinned; image updates require validation. No claim of an independent audit or penetration test is made.
+- Resolve deployment image tags to approved digests and validate image updates as part of release acceptance. Register third-party security assessments with their report identifiers and tested versions.
 
 Run the application behind HTTPS for network access. Keep `.env`, `data/`, backups, logs, and real customer datasets out of the repository. The checked-in screenshots contain synthetic data and test-only accounts.

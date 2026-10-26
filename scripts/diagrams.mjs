@@ -38,7 +38,7 @@ function svg(title, subtitle, height, content, footer) {
 
 const architecture = [
   ...[[60, '01 / 浏览器'], [528, '02 / 应用服务器'], [996, '03 / 持久化数据']].map(([x, label]) => `<rect x="${x}" y="186" width="384" height="700" rx="22" class="lane"/>${text(x + 20, 222, label, 'lane-title')}`),
-  card(80, 252, 344, 174, 'WEB WORKBENCH', '三维分析工作台', ['WebGL 点云 / 正交切片', '项目导航 / RAW 与切片导入', '本地浏览器，无运行时 CDN']),
+  card(80, 252, 344, 174, 'WEB WORKBENCH', '三维分析工作台', ['WebGL 点云 / 正交切片', 'GB 级 RAW 分块 / 区域采样', '项目导航 / 图片序列导入']),
   card(80, 480, 344, 148, 'ROLE-BASED ACCESS', '团队与企业空间', ['管理员 / 分析员 / 查看者', '服务端校验企业与角色'], 'purple'),
   card(80, 690, 344, 166, 'REVIEW & DELIVERY', '复核与结果交付', ['追加复核 / 历史结果', 'JSON 报告 / CSV / PNG', '浏览器通过 API 读取结果']),
   card(548, 252, 344, 104, 'DEPLOYMENT', 'Caddy · HTTPS 代理', []),
@@ -59,7 +59,7 @@ const architecture = [
 ].join('');
 
 const steps = [
-  [60, 256, '01 / IMPORT', '导入体数据', ['uint8 / uint16 RAW', '或 PNG / JPEG / BMP 切片', '设置真实 XYZ 体素间距']],
+  [60, 256, '01 / IMPORT', '导入体数据', ['uint8 / uint16 RAW', 'GB 级分块 / ROI / 降采样', '设置真实 XYZ 体素间距']],
   [400, 256, '02 / ROI', '定义测量区域', ['矩形体 / 椭圆柱 ROI', '设置边缘裁剪比例', '确保 ROI 位于材料内部']],
   [740, 256, '03 / SEGMENT', '灰度阈值分割', ['手动 / Otsu 阈值', '选择暗孔隙或亮区域', '保留原始分割体素统计']],
   [1080, 256, '04 / LABEL', '标记连通孔隙', ['6 / 26 邻域', '最小体素数筛选', '记录边界接触情况']],
@@ -77,6 +77,6 @@ const workflow = [
 ].join('');
 
 await mkdir(output, { recursive: true });
-await writeFile(new URL('architecture.svg', output), svg('VoxelScope · 系统架构', '当前实现：单实例自托管 CT 孔隙分析与团队协作平台', 1000, architecture, '单分析线程 · 每体数据 ≤ 4,194,304 体素 · Docker / HTTPS 配置供目标环境验证'));
-await writeFile(new URL('workflow.svg', output), svg('VoxelScope · CT 分析流程', '从体数据导入到定量分析、复核和结果交付', 900, workflow, '合成 phantom 用于程序验证；真实工件的分割与测量需单独验证。'));
+await writeFile(new URL('architecture.svg', output), svg('VoxelScope · 系统架构', '自托管 CT 孔隙分析与团队协作平台', 1000, architecture, 'RAW 分块读取与区域采样 · 独立线程分析 · 结果复核与追溯 · Docker / HTTPS 部署'));
+await writeFile(new URL('workflow.svg', output), svg('VoxelScope · CT 分析流程', '从体数据导入到定量分析、复核和结果交付', 900, workflow, '导入参数、采样记录与测量结果随任务保存 · 演示使用固定种子合成 phantom'));
 console.log(`Documentation diagrams written to ${fileURLToPath(output)}`);

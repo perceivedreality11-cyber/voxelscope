@@ -81,6 +81,18 @@ test('RAW import preserves native data with SHA256 and validates byte counts', a
   const bad = upload(); bad.bytes = new Uint8Array(63);
   assert.equal((await analyst.request('/api/datasets', bad)).status, 400);
 });
+test('RAW sampling provenance is validated and preserved by the server', async () => {
+  const rawSource = { dims: [8, 8, 8], spacing: [1, 1.5, 2], bits: 8, offset: 0, littleEndian: true, origin: [0, 0, 0], size: [8, 8, 8], stride: [2, 2, 2] };
+  const meta = { name: 'Sampled source fixture', projectId, dims: [4, 4, 4], spacing: [2, 3, 4], bits: 8, format: 'RAW', rawSource };
+  const upload = () => ({ method: 'POST', bytes: new Uint8Array(64).fill(100), headers: { 'Content-Type': 'application/octet-stream', 'X-Volume-Meta': encodeURIComponent(JSON.stringify(meta)) } });
+  const created = await analyst.request('/api/datasets', upload());
+  assert.equal(created.status, 201);
+  assert.deepEqual(created.body.meta.source.rawImport, rawSource);
+  meta.spacing = [1, 1, 1];
+  assert.equal((await analyst.request('/api/datasets', upload())).status, 400);
+  const invalid = upload(); invalid.headers['X-Volume-Meta'] = 'null';
+  assert.equal((await analyst.request('/api/datasets', invalid)).status, 400);
+});
 test('analysis runs in the persistent worker queue and returns an exact, traceable report', async () => {
   const settings = { method: 'manual', threshold: 95, dark: true, connectivity: 26, minSize: 1, shape: 'box', inset: 0 };
   assert.equal((await viewer.request('/api/jobs', { method: 'POST', data: { datasetId, settings } })).status, 403);

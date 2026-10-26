@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-10-26T02:14:06.910Z",
+  "node": "v24.21.0",
+  "platform": "win32",
+  "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+  "scope": "Local loopback HTTP, distinct viewer sessions, synthetic 4x4x4 data, one background analysis worker. TLS, real customer volumes and long-duration operation are separate deployment acceptance measurements.",
+  "clients": 8,
+  "requestsPerClient": 50,
+  "totalRequests": 400,
+  "failures": 0,
+  "elapsedMs": 177.3,
+  "requestsPerSecond": 2256,
+  "latencyMs": {
+    "p50": 2.73,
+    "p95": 8.44,
+    "p99": 11.42
+  },
+  "completedAnalysisJobs": 8,
+  "exactMeasurementChecks": 8,
+  "rssMb": 86
+}

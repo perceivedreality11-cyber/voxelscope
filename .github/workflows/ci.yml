@@ -17,6 +17,7 @@ jobs:
           node-version: '24'
       - run: npm run check
       - run: npm test
+      - run: npm run test:load
   browser:
     runs-on: ubuntu-latest
     steps:

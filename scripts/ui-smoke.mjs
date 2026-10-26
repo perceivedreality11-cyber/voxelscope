@@ -106,6 +106,31 @@ try {
   await page.locator('#run-analysis').click(); await page.waitForFunction(() => !document.getElementById('export-json').disabled);
   assert.equal((await page.locator('#stat-porosity').textContent()).replace(/\s/g, ''), '6.25%');
   assert.match(await page.locator('#dataset-meta').textContent(), /16-BIT/);
+  // Read only a strided ROI from a larger RAW source, preserving sampling provenance.
+  await page.locator('#import-button').click();
+  const regionRaw = Buffer.alloc(4 + 20 * 20 * 4 * 2);
+  for (let i = 0; i < 1600; i++) regionRaw.writeUInt16BE(1001, 4 + i * 2);
+  for (let x = 0; x < 8; x++) regionRaw.writeUInt16BE(1000, 4 + 2 * (2 + 2 * x + 20 * 2));
+  await page.locator('[name=name]').fill('Strided RAW ROI browser fixture');
+  await page.locator('[name=files]').setInputFiles({ name: 'region.raw', mimeType: 'application/octet-stream', buffer: regionRaw });
+  for (const [name, value] of [['w', '20'], ['h', '20'], ['d', '4'], ['offset', '4']]) await page.locator(`[name=${name}]`).fill(value);
+  await page.locator('[name=bits]').selectOption('16'); await page.locator('[name=endian]').selectOption('big');
+  await page.locator('details').last().evaluate(el => { el.open = true; });
+  for (const [name, value] of [['ox', '2'], ['oy', '2'], ['oz', '0'], ['rx', '16'], ['ry', '16'], ['rz', '4'], ['tx', '2'], ['ty', '2'], ['tz', '2']]) await page.locator(`[name=${name}]`).fill(value);
+  await page.locator('#modal-submit').click(); await page.locator('#modal').waitFor({ state: 'hidden' });
+  const regionId = await page.locator('#dataset-select').inputValue();
+  const sampledBytes = await (await page.request.get(`${base}/api/datasets/${regionId}/raw`)).body();
+  assert.equal(sampledBytes.length, 256);
+  assert.equal(sampledBytes.readUInt16LE(0), 1000);
+  assert.equal(sampledBytes.readUInt16LE(16), 1001);
+  await page.locator('#run-analysis').click(); await page.waitForFunction(() => !document.getElementById('export-json').disabled);
+  assert.equal((await page.locator('#stat-porosity').textContent()).replace(/\s/g, ''), '6.25%');
+  const regionDownload = page.waitForEvent('download'); await page.locator('#export-json').click();
+  const regionReport = JSON.parse(await readFile(await (await regionDownload).path(), 'utf8'));
+  assert.deepEqual(regionReport.volume.dims, [8, 8, 2]);
+  assert.deepEqual(regionReport.volume.spacing, [16, 16, 24]);
+  assert.deepEqual(regionReport.volume.source.rawImport.origin, [2, 2, 0]);
+  assert.deepEqual(regionReport.volume.source.rawImport.stride, [2, 2, 2]);
   // A separate browser session can read results while all write/admin controls stay hidden.
   const viewerPage = await browser.newPage();
   try {
@@ -131,7 +156,7 @@ try {
   await page.locator('#logout').click(); await page.locator('#login-screen').waitFor({ state: 'visible' });
   await page.screenshot({ path: join(output, 'login.png'), fullPage: true });
   assert.deepEqual(errors, [], `Browser errors: ${errors.join('\n')}`);
-  console.log('Browser workflow passed: login → project → phantom → analysis → JSON/CSV contents + PNG export → review → team → audit → mobile → natural-order PNG import → uint16 BE RAW with header → read-only viewer → logout.');
+  console.log('Browser workflow passed: login → project → phantom → analysis → JSON/CSV contents + PNG export → review → team → audit → mobile → natural-order PNG import → uint16 BE RAW → strided RAW ROI and provenance → read-only viewer → logout.');
 } catch (error) {
   if (page) {
     console.error('Modal validation:', await page.locator('#modal-error').textContent().catch(() => 'unavailable'));

@@ -18,7 +18,7 @@
   <rect x="60" y="178" width="1320" height="44" rx="10" fill="#132a2b"/><text x="80" y="206" class="tag">执行保障：持久化队列  /  独立计算线程  /  任务取消与超时  /  输入完整性校验</text><g><rect x="60" y="256" width="300" height="194" rx="16" class="card"/>
     <rect x="60" y="274" width="3" height="28" rx="1.5" fill="var(--teal)"/>
     <text x="82" y="286" class="teal">01 / IMPORT</text><text x="82" y="319" class="card-title">导入体数据</text>
-    <text x="82" y="350" class="body">uint8 / uint16 RAW</text><text x="82" y="375" class="body">或 PNG / JPEG / BMP 切片</text><text x="82" y="400" class="body">设置真实 XYZ 体素间距</text></g><g><rect x="400" y="256" width="300" height="194" rx="16" class="card"/>
+    <text x="82" y="350" class="body">uint8 / uint16 RAW</text><text x="82" y="375" class="body">GB 级分块 / ROI / 降采样</text><text x="82" y="400" class="body">设置真实 XYZ 体素间距</text></g><g><rect x="400" y="256" width="300" height="194" rx="16" class="card"/>
     <rect x="400" y="274" width="3" height="28" rx="1.5" fill="var(--teal)"/>
     <text x="422" y="286" class="teal">02 / ROI</text><text x="422" y="319" class="card-title">定义测量区域</text>
     <text x="422" y="350" class="body">矩形体 / 椭圆柱 ROI</text><text x="422" y="375" class="body">设置边缘裁剪比例</text><text x="422" y="400" class="body">确保 ROI 位于材料内部</text></g><g><rect x="740" y="256" width="300" height="194" rx="16" class="card"/>
@@ -41,5 +41,5 @@
     <text x="82" y="614" class="purple">08 / EXPORT</text><text x="82" y="647" class="card-title">导出交付</text>
     <text x="82" y="678" class="body">JSON 完整报告</text><text x="82" y="703" class="body">CSV 全量连通域</text><text x="82" y="728" class="body">PNG 三维视图</text></g><path d="M360 352 H400" class="edge" marker-end="url(#arrow)"/><path d="M700 352 H740" class="edge" marker-end="url(#arrow)"/><path d="M1040 352 H1080" class="edge" marker-end="url(#arrow)"/><path d="M1230 450 V584" class="edge" marker-end="url(#arrow)"/><text x="1247" y="520" class="edge-label">计算结果</text><path d="M1080 680 H1040" class="edge" marker-end="url(#arrow)"/><path d="M740 680 H700" class="edge" marker-end="url(#arrow)"/><path d="M400 680 H360" class="edge" marker-end="url(#arrow)"/>
   <path d="M60 816 H1380" stroke="#27384f"/>
-  <text x="60" y="853" class="footer">合成 phantom 用于程序验证；真实工件的分割与测量需单独验证。</text><text x="1225" y="853" class="tag">VOXELSCOPE 1.0</text>
+  <text x="60" y="853" class="footer">导入参数、采样记录与测量结果随任务保存 · 演示使用固定种子合成 phantom</text><text x="1225" y="853" class="tag">VOXELSCOPE 1.0</text>
 </svg>
