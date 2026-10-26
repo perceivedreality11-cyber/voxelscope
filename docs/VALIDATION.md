@@ -18,6 +18,7 @@
 | `node scripts/benchmark.mjs` | 64³ / 96³ / 128³ 合成体计算，未筛选分割体素数均等于真值；机器原始结果见 benchmark.json |
 | `npm run test:load` | 8 个独立账号、400 次 API 请求、8 个后台任务，错误数为 0；原始结果见 [load-test.json](load-test.json) |
 | 初始发布的远端回归 | [Windows / Ubuntu / Chromium 全部通过](https://github.com/perceivedreality11-cyber/voxelscope/actions/runs/40257248821)，对应初始版本的 32 项测试 |
+| RAW 增强版远端回归 | [Windows / Ubuntu / Chromium 全部通过](https://github.com/perceivedreality11-cyber/voxelscope/actions/runs/40258711272)，包含 39 项功能用例及独立账号并发脚本 |
 
 数值测试覆盖各向异性体积与面积、物理质心、6/26 连通性、最小尺寸筛选、ROI 边界、行 / 层索引防绕回、16 位精度与字节序、剖面守恒、空结果和非法输入。
 

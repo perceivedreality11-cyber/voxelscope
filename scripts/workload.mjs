@@ -7,7 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { createApp } from '../server/app.js';
 
 const clients = Number(process.argv[2] || 8), requestsPerClient = Number(process.argv[3] || 50);
-if (!Number.isSafeInteger(clients) || clients < 1 || clients > 8 || !Number.isSafeInteger(requestsPerClient) || requestsPerClient < 1 || requestsPerClient > 10_000) throw new Error('Usage: node scripts/load-test.mjs [clients 1..8] [requests per client 1..10000]');
+if (!Number.isSafeInteger(clients) || clients < 1 || clients > 8 || !Number.isSafeInteger(requestsPerClient) || requestsPerClient < 1 || requestsPerClient > 10_000) throw new Error('Usage: node scripts/workload.mjs [clients 1..8] [requests per client 1..10000]');
 const directory = await mkdtemp(join(tmpdir(), 'voxelscope-load-'));
 const password = 'Temporary-Workload-Fixture-2026!';
 let app;
